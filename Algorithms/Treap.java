@@ -24,31 +24,40 @@ public class Treap<K extends Comparable<K>, V> {
     private final Random random = new Random();
 
     public boolean contains(K key) {
-        return searchNode(root, key) != null;
+        return search(key) != null;
     }
 
     public V search(K key) {
-        Node node = searchNode(root, key);
-        return node == null ? null : node.value;
-    }
+        Node current = root;
 
-    private Node searchNode(Node node, K key) {
-        if (node == null) return null;
+        while (current != null) {
+            int cmp = key.compareTo(current.key);
 
-        int cmp = key.compareTo(node.key);
-        if (cmp == 0) return node;
-        if (cmp < 0) return searchNode(node.left, key);
-        return searchNode(node.right, key);
+            if (cmp == 0) {
+                return current.value;
+            } else if (cmp < 0) {
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
+
+        return null;
     }
 
     public boolean insert(K key, V value) {
-        if (contains(key)) return false;
+        if (contains(key)) {
+            return false;
+        }
+
         root = insert(root, new Node(key, value));
         return true;
     }
 
     private Node insert(Node current, Node newNode) {
-        if (current == null) return newNode;
+        if (current == null) {
+            return newNode;
+        }
 
         int cmp = newNode.key.compareTo(current.key);
 
@@ -63,17 +72,23 @@ public class Treap<K extends Comparable<K>, V> {
                 current = rotateLeft(current);
             }
         }
+
         return current;
     }
 
     public boolean delete(K key) {
-        if (!contains(key)) return false;
+        if (!contains(key)) {
+            return false;
+        }
+
         root = delete(root, key);
         return true;
     }
 
     private Node delete(Node node, K key) {
-        if (node == null) return null;
+        if (node == null) {
+            return null;
+        }
 
         int cmp = key.compareTo(node.key);
 
@@ -100,22 +115,27 @@ public class Treap<K extends Comparable<K>, V> {
                 }
             }
         }
+
         return node;
     }
 
     private Node rotateLeft(Node x) {
         System.out.println("Left rotation on node: " + x.key);
+
         Node y = x.right;
         x.right = y.left;
         y.left = x;
+
         return y;
     }
 
     private Node rotateRight(Node y) {
         System.out.println("Right rotation on node: " + y.key);
+
         Node x = y.left;
         y.left = x.right;
         x.right = y;
+
         return x;
     }
 
@@ -126,10 +146,49 @@ public class Treap<K extends Comparable<K>, V> {
     }
 
     private void inorder(Node node, List<String> result) {
-        if (node == null) return;
+        if (node == null) {
+            return;
+        }
+
         inorder(node.left, result);
         result.add("Spot " + node.key + " -> " + node.value);
         inorder(node.right, result);
+    }
+
+    public K predecessor(K key) {
+        Node current = root;
+        Node predecessor = null;
+
+        while (current != null) {
+            int cmp = key.compareTo(current.key);
+
+            if (cmp <= 0) {
+                current = current.left;
+            } else {
+                predecessor = current;
+                current = current.right;
+            }
+        }
+
+        return predecessor == null ? null : predecessor.key;
+    }
+
+    public K successor(K key) {
+        Node current = root;
+        Node successor = null;
+
+        while (current != null) {
+            int cmp = key.compareTo(current.key);
+
+            if (cmp < 0) {
+                successor = current;
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
+
+        return successor == null ? null : successor.key;
     }
 
     public boolean validateTreap() {
@@ -137,20 +196,34 @@ public class Treap<K extends Comparable<K>, V> {
     }
 
     private boolean validateBST(Node node, K min, K max) {
-        if (node == null) return true;
+        if (node == null) {
+            return true;
+        }
 
-        if (min != null && node.key.compareTo(min) <= 0) return false;
-        if (max != null && node.key.compareTo(max) >= 0) return false;
+        if (min != null && node.key.compareTo(min) <= 0) {
+            return false;
+        }
 
-        return validateBST(node.left, min, node.key) &&
-                validateBST(node.right, node.key, max);
+        if (max != null && node.key.compareTo(max) >= 0) {
+            return false;
+        }
+
+        return validateBST(node.left, min, node.key)
+                && validateBST(node.right, node.key, max);
     }
 
     private boolean validateHeap(Node node) {
-        if (node == null) return true;
+        if (node == null) {
+            return true;
+        }
 
-        if (node.left != null && node.left.priority > node.priority) return false;
-        if (node.right != null && node.right.priority > node.priority) return false;
+        if (node.left != null && node.left.priority > node.priority) {
+            return false;
+        }
+
+        if (node.right != null && node.right.priority > node.priority) {
+            return false;
+        }
 
         return validateHeap(node.left) && validateHeap(node.right);
     }

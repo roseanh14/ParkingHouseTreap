@@ -18,14 +18,13 @@ public class MainFrame extends JFrame {
         ParkingFloorPanel floorPanel = new ParkingFloorPanel(service, resultPanel);
         ControlPanel controlPanel = new ControlPanel(service, floorPanel, resultPanel);
 
-        JSplitPane centerSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, floorPanel, resultPanel);
-        centerSplit.setResizeWeight(0.72);
-        centerSplit.setDividerSize(6);
-        centerSplit.setBorder(null);
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Parking Visualization", floorPanel);
+        tabs.addTab("Results and Action Log", resultPanel);
 
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.WEST);
-        add(centerSplit, BorderLayout.CENTER);
+        add(tabs, BorderLayout.CENTER);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 900);
