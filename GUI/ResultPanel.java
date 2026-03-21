@@ -24,12 +24,4 @@ public class ResultPanel extends JPanel {
         area.setCaretPosition(0);
     }
 
-    public void appendText(String text) {
-        if (area.getText().isEmpty()) {
-            area.setText(text);
-        } else {
-            area.append("\n\n" + text);
-        }
-        area.setCaretPosition(area.getDocument().getLength());
-    }
 }

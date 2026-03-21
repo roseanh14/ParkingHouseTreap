@@ -49,10 +49,10 @@ public class ParkingFloorPanel extends JPanel {
         infoArea.setLineWrap(true);
         infoArea.setWrapStyleWord(true);
 
-        JPanel topText = new JPanel(new BorderLayout());
-        topText.setOpaque(false);
-        topText.add(titleLabel, BorderLayout.NORTH);
-        topText.add(new JScrollPane(infoArea), BorderLayout.CENTER);
+        JPanel topTextPanel = new JPanel(new BorderLayout());
+        topTextPanel.setOpaque(false);
+        topTextPanel.add(titleLabel, BorderLayout.NORTH);
+        topTextPanel.add(new JScrollPane(infoArea), BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         buttonPanel.setOpaque(false);
@@ -67,7 +67,7 @@ public class ParkingFloorPanel extends JPanel {
         buttonPanel.add(nearestButton);
         buttonPanel.add(goToButton);
 
-        infoPanel.add(topText, BorderLayout.CENTER);
+        infoPanel.add(topTextPanel, BorderLayout.CENTER);
         infoPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         canvasPanel = new JPanel() {
@@ -103,10 +103,6 @@ public class ParkingFloorPanel extends JPanel {
 
     public Integer getSelectedSpot() {
         return selectedSpot;
-    }
-
-    public int getSelectedFloor() {
-        return selectedFloor;
     }
 
     public void highlightNearestFreeSpot(int spot) {
@@ -147,16 +143,27 @@ public class ParkingFloorPanel extends JPanel {
             return;
         }
 
-        String plate = JOptionPane.showInputDialog(this, "License plate:");
-        if (plate == null || plate.isBlank()) return;
+        String plate = askRequiredText("License plate:");
+        if (plate == null) {
+            return;
+        }
 
-        String owner = JOptionPane.showInputDialog(this, "Owner name:");
-        if (owner == null || owner.isBlank()) return;
+        String owner = askRequiredText("Owner name:");
+        if (owner == null) {
+            return;
+        }
 
-        String type = JOptionPane.showInputDialog(this, "Vehicle type:");
-        if (type == null || type.isBlank()) return;
+        String type = askRequiredText("Vehicle type:");
+        if (type == null) {
+            return;
+        }
 
-        String result = service.occupySpot(selectedFloor, selectedSpot, new VehicleInfo(plate, owner, type));
+        String result = service.occupySpot(
+                selectedFloor,
+                selectedSpot,
+                new VehicleInfo(plate, owner, type)
+        );
+
         resultPanel.showText(result);
         refreshInfoPanel();
         repaint();
@@ -181,6 +188,7 @@ public class ParkingFloorPanel extends JPanel {
         }
 
         int nearest = service.findNearestFreeSpot(selectedFloor, selectedSpot);
+
         if (nearest == -1) {
             suggestedSpot = null;
             goToButton.setVisible(false);
@@ -199,6 +207,14 @@ public class ParkingFloorPanel extends JPanel {
         if (suggestedSpot != null) {
             selectSpot(suggestedSpot);
         }
+    }
+
+    private String askRequiredText(String message) {
+        String value = JOptionPane.showInputDialog(this, message);
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value;
     }
 
     private void refreshInfoPanel() {
@@ -235,34 +251,34 @@ public class ParkingFloorPanel extends JPanel {
     private void drawParking(Graphics2D g2) {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int panelW = canvasPanel.getWidth();
-        int panelH = canvasPanel.getHeight();
+        int panelWidth = canvasPanel.getWidth();
+        int panelHeight = canvasPanel.getHeight();
 
         int titleY = 35;
         int topMargin = 60;
         int sideMargin = 40;
         int bottomMargin = 30;
 
-        int usableW = panelW - 2 * sideMargin;
-        int usableH = panelH - topMargin - bottomMargin;
+        int usableWidth = panelWidth - 2 * sideMargin;
+        int usableHeight = panelHeight - topMargin - bottomMargin;
 
         int columns = 6;
         int rows = 2;
 
-        int horizontalGap = Math.max(16, usableW / 45);
-        int verticalGap = Math.max(45, usableH / 5);
+        int horizontalGap = Math.max(16, usableWidth / 45);
+        int verticalGap = Math.max(45, usableHeight / 5);
 
-        int spotW = (usableW - horizontalGap * (columns - 1)) / columns;
-        int spotH = (usableH - verticalGap * (rows - 1)) / rows;
+        int spotWidth = (usableWidth - horizontalGap * (columns - 1)) / columns;
+        int spotHeight = (usableHeight - verticalGap * (rows - 1)) / rows;
 
-        spotW = Math.min(110, Math.max(75, spotW));
-        spotH = Math.min(170, Math.max(100, spotH));
+        spotWidth = Math.min(110, Math.max(75, spotWidth));
+        spotHeight = Math.min(170, Math.max(100, spotHeight));
 
-        int totalGridW = columns * spotW + (columns - 1) * horizontalGap;
-        int totalGridH = rows * spotH + (rows - 1) * verticalGap;
+        int totalGridWidth = columns * spotWidth + (columns - 1) * horizontalGap;
+        int totalGridHeight = rows * spotHeight + (rows - 1) * verticalGap;
 
-        int startX = (panelW - totalGridW) / 2;
-        int startY = topMargin + Math.max(0, (usableH - totalGridH) / 2);
+        int startX = (panelWidth - totalGridWidth) / 2;
+        int startY = topMargin + Math.max(0, (usableHeight - totalGridHeight) / 2);
 
         renderedSpots.clear();
 
@@ -272,13 +288,13 @@ public class ParkingFloorPanel extends JPanel {
 
         for (int i = 0; i < 12; i++) {
             int row = i / columns;
-            int col = i % columns;
+            int column = i % columns;
 
-            int x = startX + col * (spotW + horizontalGap);
-            int y = startY + row * (spotH + verticalGap);
+            int x = startX + column * (spotWidth + horizontalGap);
+            int y = startY + row * (spotHeight + verticalGap);
 
-            Rectangle r = new Rectangle(x, y, spotW, spotH);
-            renderedSpots.add(r);
+            Rectangle rectangle = new Rectangle(x, y, spotWidth, spotHeight);
+            renderedSpots.add(rectangle);
 
             int spotNumber = i + 1;
             boolean occupied = service.isOccupied(selectedFloor, spotNumber);
@@ -293,7 +309,7 @@ public class ParkingFloorPanel extends JPanel {
                 g2.setColor(new Color(220, 220, 220));
             }
 
-            g2.fillRect(r.x, r.y, r.width, r.height);
+            g2.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 
             if (selected) {
                 g2.setColor(new Color(52, 152, 219));
@@ -303,15 +319,15 @@ public class ParkingFloorPanel extends JPanel {
                 g2.setStroke(new BasicStroke(2f));
             }
 
-            g2.drawRect(r.x, r.y, r.width, r.height);
+            g2.drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 
             g2.setColor(Color.BLACK);
-            g2.setFont(new Font("Arial", Font.BOLD, Math.max(14, spotW / 5)));
+            g2.setFont(new Font("Arial", Font.BOLD, Math.max(14, spotWidth / 5)));
             String text = String.valueOf(spotNumber);
-            FontMetrics fm = g2.getFontMetrics();
-            int tx = r.x + (r.width - fm.stringWidth(text)) / 2;
-            int ty = r.y + 28;
-            g2.drawString(text, tx, ty);
+            FontMetrics fontMetrics = g2.getFontMetrics();
+            int textX = rectangle.x + (rectangle.width - fontMetrics.stringWidth(text)) / 2;
+            int textY = rectangle.y + 28;
+            g2.drawString(text, textX, textY);
         }
     }
 

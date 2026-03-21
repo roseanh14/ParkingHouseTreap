@@ -33,41 +33,32 @@ public class Treap<K extends Comparable<K>, V> {
         while (current != null) {
             int cmp = key.compareTo(current.key);
 
-            if (cmp == 0) {
-                return current.value;
-            } else if (cmp < 0) {
-                current = current.left;
-            } else {
-                current = current.right;
-            }
+            if (cmp == 0) return current.value;
+            if (cmp < 0) current = current.left;
+            else current = current.right;
         }
 
         return null;
     }
 
     public boolean insert(K key, V value) {
-        if (contains(key)) {
-            return false;
-        }
-
-        root = insert(root, new Node(key, value));
+        if (contains(key)) return false;
+        root = insertNode(root, new Node(key, value));
         return true;
     }
 
-    private Node insert(Node current, Node newNode) {
-        if (current == null) {
-            return newNode;
-        }
+    private Node insertNode(Node current, Node newNode) {
+        if (current == null) return newNode;
 
-        int cmp = newNode.key.compareTo(current.key);
+        if (newNode.key.compareTo(current.key) < 0) {
+            current.left = insertNode(current.left, newNode);
 
-        if (cmp < 0) {
-            current.left = insert(current.left, newNode);
             if (current.left.priority > current.priority) {
                 current = rotateRight(current);
             }
         } else {
-            current.right = insert(current.right, newNode);
+            current.right = insertNode(current.right, newNode);
+
             if (current.right.priority > current.priority) {
                 current = rotateLeft(current);
             }
@@ -77,154 +68,123 @@ public class Treap<K extends Comparable<K>, V> {
     }
 
     public boolean delete(K key) {
-        if (!contains(key)) {
-            return false;
-        }
-
-        root = delete(root, key);
+        if (!contains(key)) return false;
+        root = deleteNode(root, key);
         return true;
     }
 
-    private Node delete(Node node, K key) {
-        if (node == null) {
-            return null;
-        }
+    private Node deleteNode(Node node, K key) {
+        if (node == null) return null;
 
         int cmp = key.compareTo(node.key);
 
         if (cmp < 0) {
-            node.left = delete(node.left, key);
+            node.left = deleteNode(node.left, key);
         } else if (cmp > 0) {
-            node.right = delete(node.right, key);
+            node.right = deleteNode(node.right, key);
         } else {
-            if (node.left == null && node.right == null) {
-                return null;
-            } else if (node.left == null) {
-                node = rotateLeft(node);
-                node.left = delete(node.left, key);
-            } else if (node.right == null) {
+
+            if (node.left == null) return node.right;
+            if (node.right == null) return node.left;
+
+            if (node.left.priority > node.right.priority) {
                 node = rotateRight(node);
-                node.right = delete(node.right, key);
+                node.right = deleteNode(node.right, key);
             } else {
-                if (node.left.priority > node.right.priority) {
-                    node = rotateRight(node);
-                    node.right = delete(node.right, key);
-                } else {
-                    node = rotateLeft(node);
-                    node.left = delete(node.left, key);
-                }
+                node = rotateLeft(node);
+                node.left = deleteNode(node.left, key);
             }
         }
 
         return node;
     }
 
-    private Node rotateLeft(Node x) {
-        System.out.println("Left rotation on node: " + x.key);
+    private Node rotateLeft(Node root) {
+        Node newRoot = root.right;
+        Node movedSubtree = newRoot.left;
 
-        Node y = x.right;
-        x.right = y.left;
-        y.left = x;
+        newRoot.left = root;
+        root.right = movedSubtree;
 
-        return y;
+        return newRoot;
     }
 
-    private Node rotateRight(Node y) {
-        System.out.println("Right rotation on node: " + y.key);
+    private Node rotateRight(Node root) {
+        Node newRoot = root.left;
+        Node movedSubtree = newRoot.right;
 
-        Node x = y.left;
-        y.left = x.right;
-        x.right = y;
+        newRoot.right = root;
+        root.left = movedSubtree;
 
-        return x;
+        return newRoot;
     }
 
     public List<String> inorder() {
         List<String> result = new ArrayList<>();
-        inorder(root, result);
+        inorderTraversal(root, result);
         return result;
     }
 
-    private void inorder(Node node, List<String> result) {
-        if (node == null) {
-            return;
-        }
+    private void inorderTraversal(Node node, List<String> result) {
+        if (node == null) return;
 
-        inorder(node.left, result);
+        inorderTraversal(node.left, result);
         result.add("Spot " + node.key + " -> " + node.value);
-        inorder(node.right, result);
+        inorderTraversal(node.right, result);
     }
 
     public K predecessor(K key) {
         Node current = root;
-        Node predecessor = null;
+        Node result = null;
 
         while (current != null) {
-            int cmp = key.compareTo(current.key);
-
-            if (cmp <= 0) {
+            if (key.compareTo(current.key) <= 0) {
                 current = current.left;
             } else {
-                predecessor = current;
+                result = current;
                 current = current.right;
             }
         }
 
-        return predecessor == null ? null : predecessor.key;
+        return result == null ? null : result.key;
     }
 
     public K successor(K key) {
         Node current = root;
-        Node successor = null;
+        Node result = null;
 
         while (current != null) {
-            int cmp = key.compareTo(current.key);
-
-            if (cmp < 0) {
-                successor = current;
+            if (key.compareTo(current.key) < 0) {
+                result = current;
                 current = current.left;
             } else {
                 current = current.right;
             }
         }
 
-        return successor == null ? null : successor.key;
+        return result == null ? null : result.key;
     }
 
     public boolean validateTreap() {
-        return validateBST(root, null, null) && validateHeap(root);
+        return isBST(root, null, null) && isHeap(root);
     }
 
-    private boolean validateBST(Node node, K min, K max) {
-        if (node == null) {
-            return true;
-        }
+    private boolean isBST(Node node, K min, K max) {
+        if (node == null) return true;
 
-        if (min != null && node.key.compareTo(min) <= 0) {
-            return false;
-        }
+        if (min != null && node.key.compareTo(min) <= 0) return false;
+        if (max != null && node.key.compareTo(max) >= 0) return false;
 
-        if (max != null && node.key.compareTo(max) >= 0) {
-            return false;
-        }
-
-        return validateBST(node.left, min, node.key)
-                && validateBST(node.right, node.key, max);
+        return isBST(node.left, min, node.key)
+                && isBST(node.right, node.key, max);
     }
 
-    private boolean validateHeap(Node node) {
-        if (node == null) {
-            return true;
-        }
+    private boolean isHeap(Node node) {
+        if (node == null) return true;
 
-        if (node.left != null && node.left.priority > node.priority) {
-            return false;
-        }
+        if (node.left != null && node.left.priority > node.priority) return false;
+        if (node.right != null && node.right.priority > node.priority) return false;
 
-        if (node.right != null && node.right.priority > node.priority) {
-            return false;
-        }
-
-        return validateHeap(node.left) && validateHeap(node.right);
+        return isHeap(node.left) && isHeap(node.right);
     }
 }
