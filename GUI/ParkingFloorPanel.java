@@ -1,5 +1,6 @@
 package GUI;
 
+import Algorithms.Treap;
 import Model.VehicleInfo;
 import Service.ParkingService;
 
@@ -74,7 +75,7 @@ public class ParkingFloorPanel extends JPanel {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                drawParking((Graphics2D) g);
+                drawVisualization((Graphics2D) g);
             }
         };
         canvasPanel.setBackground(new Color(245, 245, 245));
@@ -108,8 +109,8 @@ public class ParkingFloorPanel extends JPanel {
     public void highlightNearestFreeSpot(int spot) {
         nearestFreeSpot = spot;
         suggestedSpot = spot;
-        repaint();
         refreshInfoPanel();
+        repaint();
     }
 
     public void selectSpot(int spot) {
@@ -248,15 +249,29 @@ public class ParkingFloorPanel extends JPanel {
         goToButton.setVisible(suggestedSpot != null);
     }
 
-    private void drawParking(Graphics2D g2) {
+    private void drawVisualization(Graphics2D g2) {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int panelWidth = canvasPanel.getWidth();
         int panelHeight = canvasPanel.getHeight();
 
+        int gap = 20;
+        int treapWidth = Math.max(430, panelWidth / 2 - 40);
+
+        Rectangle parkingArea = new Rectangle(0, 0, panelWidth - treapWidth - gap, panelHeight);
+        Rectangle treapArea = new Rectangle(panelWidth - treapWidth, 0, treapWidth, panelHeight);
+
+        drawParkingArea(g2, parkingArea);
+        drawTreapArea(g2, treapArea);
+    }
+
+    private void drawParkingArea(Graphics2D g2, Rectangle area) {
+        int panelWidth = area.width;
+        int panelHeight = area.height;
+
         int titleY = 35;
         int topMargin = 60;
-        int sideMargin = 40;
+        int sideMargin = 30;
         int bottomMargin = 30;
 
         int usableWidth = panelWidth - 2 * sideMargin;
@@ -265,26 +280,26 @@ public class ParkingFloorPanel extends JPanel {
         int columns = 6;
         int rows = 2;
 
-        int horizontalGap = Math.max(16, usableWidth / 45);
-        int verticalGap = Math.max(45, usableHeight / 5);
+        int horizontalGap = Math.max(10, usableWidth / 50);
+        int verticalGap = Math.max(28, usableHeight / 7);
 
         int spotWidth = (usableWidth - horizontalGap * (columns - 1)) / columns;
         int spotHeight = (usableHeight - verticalGap * (rows - 1)) / rows;
 
-        spotWidth = Math.min(110, Math.max(75, spotWidth));
-        spotHeight = Math.min(170, Math.max(100, spotHeight));
+        spotWidth = Math.min(85, Math.max(58, spotWidth));
+        spotHeight = Math.min(145, Math.max(82, spotHeight));
 
         int totalGridWidth = columns * spotWidth + (columns - 1) * horizontalGap;
         int totalGridHeight = rows * spotHeight + (rows - 1) * verticalGap;
 
-        int startX = (panelWidth - totalGridWidth) / 2;
-        int startY = topMargin + Math.max(0, (usableHeight - totalGridHeight) / 2);
+        int startX = area.x + (panelWidth - totalGridWidth) / 2;
+        int startY = area.y + topMargin + Math.max(0, (usableHeight - totalGridHeight) / 2);
 
         renderedSpots.clear();
 
         g2.setColor(Color.BLACK);
         g2.setFont(new Font("Arial", Font.BOLD, 24));
-        g2.drawString("Floor " + selectedFloor, 20, titleY);
+        g2.drawString("Floor " + selectedFloor, area.x + 20, area.y + titleY);
 
         for (int i = 0; i < 12; i++) {
             int row = i / columns;
@@ -322,13 +337,88 @@ public class ParkingFloorPanel extends JPanel {
             g2.drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 
             g2.setColor(Color.BLACK);
-            g2.setFont(new Font("Arial", Font.BOLD, Math.max(14, spotWidth / 5)));
+            g2.setFont(new Font("Arial", Font.BOLD, Math.max(13, spotWidth / 5)));
             String text = String.valueOf(spotNumber);
-            FontMetrics fontMetrics = g2.getFontMetrics();
-            int textX = rectangle.x + (rectangle.width - fontMetrics.stringWidth(text)) / 2;
-            int textY = rectangle.y + 28;
+            FontMetrics metrics = g2.getFontMetrics();
+            int textX = rectangle.x + (rectangle.width - metrics.stringWidth(text)) / 2;
+            int textY = rectangle.y + 24;
             g2.drawString(text, textX, textY);
         }
+    }
+
+    private void drawTreapArea(Graphics2D g2, Rectangle area) {
+        g2.setColor(new Color(235, 235, 235));
+        g2.fillRoundRect(area.x + 4, area.y + 8, area.width - 8, area.height - 16, 18, 18);
+
+        g2.setColor(Color.DARK_GRAY);
+        g2.setFont(new Font("Arial", Font.BOLD, 18));
+        g2.drawString("Treap Structure", area.x + 18, area.y + 32);
+
+        Treap.ViewNode<Integer, VehicleInfo> root = service.getTreapViewRoot(selectedFloor);
+
+        if (root == null) {
+            g2.setFont(new Font("Arial", Font.PLAIN, 14));
+            g2.drawString("Treap is empty.", area.x + 18, area.y + 60);
+            return;
+        }
+
+        int centerX = area.x + area.width / 2;
+        int startY = area.y + 80;
+        int offset = Math.max(55, area.width / 4);
+
+        drawTreapNode(g2, root, centerX, startY, offset);
+    }
+
+    private void drawTreapNode(
+            Graphics2D g2,
+            Treap.ViewNode<Integer, VehicleInfo> node,
+            int x,
+            int y,
+            int offset
+    ) {
+        if (node == null) {
+            return;
+        }
+
+        int nextY = y + 72;
+        int nextOffset = Math.max(38, offset / 2);
+
+        if (node.left != null) {
+            int childX = x - offset;
+            g2.setColor(Color.BLACK);
+            g2.drawLine(x, y, childX, nextY);
+            drawTreapNode(g2, node.left, childX, nextY, nextOffset);
+        }
+
+        if (node.right != null) {
+            int childX = x + offset;
+            g2.setColor(Color.BLACK);
+            g2.drawLine(x, y, childX, nextY);
+            drawTreapNode(g2, node.right, childX, nextY, nextOffset);
+        }
+
+        int radius = 22;
+
+        g2.setColor(new Color(90, 170, 240));
+        g2.fillOval(x - radius, y - radius, radius * 2, radius * 2);
+
+        g2.setColor(Color.BLACK);
+        g2.setStroke(new BasicStroke(2f));
+        g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
+
+        g2.setFont(new Font("Arial", Font.BOLD, 11));
+        String keyText = String.valueOf(node.key);
+        FontMetrics keyMetrics = g2.getFontMetrics();
+        int keyX = x - keyMetrics.stringWidth(keyText) / 2;
+        int keyY = y - 2;
+        g2.drawString(keyText, keyX, keyY);
+
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        String priorityText = "p=" + node.priority;
+        FontMetrics priorityMetrics = g2.getFontMetrics();
+        int priorityX = x - priorityMetrics.stringWidth(priorityText) / 2;
+        int priorityY = y + 12;
+        g2.drawString(priorityText, priorityX, priorityY);
     }
 
     @Override

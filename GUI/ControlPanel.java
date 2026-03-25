@@ -70,7 +70,8 @@ public class ControlPanel extends JPanel {
         add(section(
                 "4. Treap Operations",
                 createButton("List Occupied Spots", this::listOccupiedSpots),
-                createButton("Validate Treap", this::validateTreap)
+                createButton("Validate Treap", this::validateTreap),
+                createButton("Show Treap", this::showTreap)
         ));
 
         add(Box.createVerticalGlue());
@@ -91,7 +92,7 @@ public class ControlPanel extends JPanel {
                 ),
                 new EmptyBorder(8, 8, 8, 8)
         ));
-        panel.setMaximumSize(new Dimension(240, 300));
+        panel.setMaximumSize(new Dimension(240, 320));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         for (int i = 0; i < components.length; i++) {
@@ -235,5 +236,14 @@ public class ControlPanel extends JPanel {
         }
 
         resultPanel.showText(service.validateTreap(floor));
+    }
+
+    private void showTreap() {
+        int floor = getSelectedFloorOrShowMessage();
+        if (floor == -1) {
+            return;
+        }
+
+        resultPanel.showText("Treap structure for floor " + floor + ":\n\n" + service.printTreap(floor));
     }
 }
