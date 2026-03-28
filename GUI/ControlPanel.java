@@ -220,6 +220,9 @@ public class ControlPanel extends JPanel {
         floorPanel.highlightNearestFreeSpot(nearestSpot);
     }
 
+
+    //u nasledujicich tri metod udelat aby v GUI automaticky preklidlo na zalozku s result logami. Jinak by to vypadalo
+    //ze tlacitka List Occupied Spots, Validate Treap a Show Treap nic nedelaji
     private void listOccupiedSpots() {
         int floor = getSelectedFloorOrShowMessage();
         if (floor == -1) {
