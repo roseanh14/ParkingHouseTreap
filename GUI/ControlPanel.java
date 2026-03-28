@@ -147,6 +147,7 @@ public class ControlPanel extends JPanel {
         }
     }
 
+    //u teto metody upravit tlacitko ktere ji vola, aby bylo neaktivni pokud je vybrane parkovaci misto jiz zabrane
     private void occupySelectedSpot() {
         int floor = getSelectedFloorOrShowMessage();
         if (floor == -1) {
