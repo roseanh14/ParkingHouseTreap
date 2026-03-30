@@ -145,16 +145,23 @@ public class ParkingService {
         Integer predecessor = treap.predecessor(spot);
         Integer successor = treap.successor(spot);
 
-        int leftCandidate = (predecessor == null) ? spot - 1 : predecessor - 1;
-        int rightCandidate = (successor == null) ? spot + 1 : successor + 1;
+        int leftBoundary = spot;
+        int rightBoundary = spot;
 
-        while (leftCandidate >= 1 && treap.contains(leftCandidate)) {
-            leftCandidate--;
+        Integer currentLeft = predecessor;
+        while (currentLeft != null && currentLeft == leftBoundary - 1) {
+            leftBoundary = currentLeft;
+            currentLeft = treap.predecessor(leftBoundary);
         }
 
-        while (rightCandidate <= maxSpot && treap.contains(rightCandidate)) {
-            rightCandidate++;
+        Integer currentRight = successor;
+        while (currentRight != null && currentRight == rightBoundary + 1) {
+            rightBoundary = currentRight;
+            currentRight = treap.successor(rightBoundary);
         }
+
+        int leftCandidate = leftBoundary - 1;
+        int rightCandidate = rightBoundary + 1;
 
         if (leftCandidate < 1 && rightCandidate > maxSpot) {
             return -1;
