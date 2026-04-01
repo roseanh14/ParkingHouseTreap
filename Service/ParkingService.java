@@ -6,6 +6,7 @@ import Model.ParkingHouse;
 import Model.VehicleInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public class ParkingService {
 
@@ -94,7 +95,7 @@ public class ParkingService {
         }
 
         Treap<Integer, VehicleInfo> treap = parkingHouse.getFloor(floor).getOccupiedTreap();
-        List<TreapHelper.Entry<Integer, VehicleInfo>> occupied = TreapHelper.inorder(treap);
+        List<Map.Entry<Integer, VehicleInfo>> occupied = treap.getInOrder();
 
         if (occupied.isEmpty()) {
             return "No occupied spots on floor " + floor + ".";
@@ -103,11 +104,11 @@ public class ParkingService {
         StringBuilder result = new StringBuilder();
         result.append("Occupied spots on floor ").append(floor).append(":\n");
 
-        for (TreapHelper.Entry<Integer, VehicleInfo> entry : occupied) {
+        for (Map.Entry<Integer, VehicleInfo> entry : occupied) {
             result.append("Spot ")
-                    .append(entry.key())
+                    .append(entry.getKey())
                     .append(" -> ")
-                    .append(entry.value())
+                    .append(entry.getValue())
                     .append("\n");
         }
 

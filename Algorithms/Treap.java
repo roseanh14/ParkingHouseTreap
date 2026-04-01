@@ -1,6 +1,10 @@
 package Algorithms;
 
 import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.AbstractMap;
 
 public class Treap<K extends Comparable<K>, V> {
 
@@ -195,6 +199,22 @@ public class Treap<K extends Comparable<K>, V> {
         }
 
         return result == null ? null : result.key;
+    }
+
+    public List<Map.Entry<K, V>> getInOrder() {
+        List<Map.Entry<K, V>> result = new ArrayList<>();
+        inOrder(root, result);
+        return result;
+    }
+
+    private void inOrder(Node node, List<Map.Entry<K, V>> result) {
+        if (node == null) {
+            return;
+        }
+
+        inOrder(node.left, result);
+        result.add(new AbstractMap.SimpleEntry<>(node.key, node.value));
+        inOrder(node.right, result);
     }
 
     public String getOperationLog() {
