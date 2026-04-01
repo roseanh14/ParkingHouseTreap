@@ -25,8 +25,10 @@ public class ParkingService {
         Treap<Integer, VehicleInfo> treap = parkingFloor.getOccupiedTreap();
 
         boolean inserted = treap.insert(spot, info);
+        String log = treap.getOperationLog();
+
         if (!inserted) {
-            return "Spot " + spot + " is already occupied.";
+            return "Spot " + spot + " is already occupied.\n\nLast treap operation:\n" + log;
         }
 
         actionLog.append("Occupied floor ")
@@ -37,7 +39,10 @@ public class ParkingService {
                 .append(info.licensePlate())
                 .append("\n");
 
-        return "Spot occupied successfully.\nTreap valid: " + treap.validateTreap();
+        return "Spot occupied successfully.\nTreap valid: "
+                + treap.validateTreap()
+                + "\n\nLast treap operation:\n"
+                + log;
     }
 
     public String releaseSpot(int floor, int spot) {
@@ -49,8 +54,10 @@ public class ParkingService {
         Treap<Integer, VehicleInfo> treap = parkingFloor.getOccupiedTreap();
 
         boolean removed = treap.delete(spot);
+        String log = treap.getOperationLog();
+
         if (!removed) {
-            return "Spot " + spot + " is not occupied.";
+            return "Spot " + spot + " is not occupied.\n\nLast treap operation:\n" + log;
         }
 
         actionLog.append("Released floor ")
@@ -59,7 +66,10 @@ public class ParkingService {
                 .append(spot)
                 .append("\n");
 
-        return "Spot released successfully.\nTreap valid: " + treap.validateTreap();
+        return "Spot released successfully.\nTreap valid: "
+                + treap.validateTreap()
+                + "\n\nLast treap operation:\n"
+                + log;
     }
 
     public boolean isOccupied(int floor, int spot) {

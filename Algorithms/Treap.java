@@ -20,6 +20,7 @@ public class Treap<K extends Comparable<K>, V> {
 
     private Node root;
     private final Random random = new Random();
+    private final StringBuilder operationLog = new StringBuilder();
 
     public boolean contains(K key) {
         return findNode(key) != null;
@@ -49,16 +50,21 @@ public class Treap<K extends Comparable<K>, V> {
     }
 
     public boolean insert(K key, V value) {
+        clearOperationLog();
+
         if (contains(key)) {
+            log("Insert skipped: key " + key + " already exists.");
             return false;
         }
 
+        log("INSERT key=" + key);
         root = insertNode(root, new Node(key, value));
         return true;
     }
 
     private Node insertNode(Node current, Node newNode) {
         if (current == null) {
+            log("Inserted key=" + newNode.key + ", priority=" + newNode.priority);
             return newNode;
         }
 
@@ -68,12 +74,14 @@ public class Treap<K extends Comparable<K>, V> {
             current.left = insertNode(current.left, newNode);
 
             if (current.left != null && current.left.priority > current.priority) {
+                log("RIGHT ROTATION on key=" + current.key);
                 current = rotateRight(current);
             }
         } else {
             current.right = insertNode(current.right, newNode);
 
             if (current.right != null && current.right.priority > current.priority) {
+                log("LEFT ROTATION on key=" + current.key);
                 current = rotateLeft(current);
             }
         }
@@ -82,10 +90,14 @@ public class Treap<K extends Comparable<K>, V> {
     }
 
     public boolean delete(K key) {
+        clearOperationLog();
+
         if (!contains(key)) {
+            log("Delete skipped: key " + key + " does not exist.");
             return false;
         }
 
+        log("DELETE key=" + key);
         root = deleteNode(root, key);
         return true;
     }
@@ -102,22 +114,29 @@ public class Treap<K extends Comparable<K>, V> {
         } else if (cmp > 0) {
             node.right = deleteNode(node.right, key);
         } else {
+            log("Deleting key=" + node.key + ", priority=" + node.priority);
+
             if (node.left == null && node.right == null) {
+                log("Leaf removed: key=" + node.key);
                 return null;
             }
 
             if (node.left == null) {
+                log("Node replaced by right child: key=" + node.key);
                 return node.right;
             }
 
             if (node.right == null) {
+                log("Node replaced by left child: key=" + node.key);
                 return node.left;
             }
 
             if (node.left.priority > node.right.priority) {
+                log("RIGHT ROTATION on key=" + node.key);
                 node = rotateRight(node);
                 node.right = deleteNode(node.right, key);
             } else {
+                log("LEFT ROTATION on key=" + node.key);
                 node = rotateLeft(node);
                 node.left = deleteNode(node.left, key);
             }
@@ -176,6 +195,18 @@ public class Treap<K extends Comparable<K>, V> {
         }
 
         return result == null ? null : result.key;
+    }
+
+    public String getOperationLog() {
+        return operationLog.toString();
+    }
+
+    public void clearOperationLog() {
+        operationLog.setLength(0);
+    }
+
+    private void log(String message) {
+        operationLog.append(message).append("\n");
     }
 
     public boolean validateTreap() {
