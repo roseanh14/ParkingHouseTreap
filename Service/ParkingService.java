@@ -24,15 +24,9 @@ public class ParkingService {
         ParkingFloor parkingFloor = parkingHouse.getFloor(floor);
         Treap<Integer, VehicleInfo> treap = parkingFloor.getOccupiedTreap();
 
-        treap.clearRotationLog();
-
         boolean inserted = treap.insert(spot, info);
         if (!inserted) {
-            String log = treap.getRotationLog();
-            if (log.isBlank()) {
-                return "Spot " + spot + " is already occupied.";
-            }
-            return "Spot " + spot + " is already occupied.\n\nTreap log:\n" + log;
+            return "Spot " + spot + " is already occupied.";
         }
 
         actionLog.append("Occupied floor ")
@@ -43,16 +37,7 @@ public class ParkingService {
                 .append(info.licensePlate())
                 .append("\n");
 
-        StringBuilder result = new StringBuilder();
-        result.append("Spot occupied successfully.\n");
-        result.append("Treap valid: ").append(treap.validateTreap());
-
-        String log = treap.getRotationLog();
-        if (!log.isBlank()) {
-            result.append("\n\nTreap log:\n").append(log);
-        }
-
-        return result.toString();
+        return "Spot occupied successfully.\nTreap valid: " + treap.validateTreap();
     }
 
     public String releaseSpot(int floor, int spot) {
@@ -63,15 +48,9 @@ public class ParkingService {
         ParkingFloor parkingFloor = parkingHouse.getFloor(floor);
         Treap<Integer, VehicleInfo> treap = parkingFloor.getOccupiedTreap();
 
-        treap.clearRotationLog();
-
         boolean removed = treap.delete(spot);
         if (!removed) {
-            String log = treap.getRotationLog();
-            if (log.isBlank()) {
-                return "Spot " + spot + " is not occupied.";
-            }
-            return "Spot " + spot + " is not occupied.\n\nTreap log:\n" + log;
+            return "Spot " + spot + " is not occupied.";
         }
 
         actionLog.append("Released floor ")
@@ -80,16 +59,7 @@ public class ParkingService {
                 .append(spot)
                 .append("\n");
 
-        StringBuilder result = new StringBuilder();
-        result.append("Spot released successfully.\n");
-        result.append("Treap valid: ").append(treap.validateTreap());
-
-        String log = treap.getRotationLog();
-        if (!log.isBlank()) {
-            result.append("\n\nTreap log:\n").append(log);
-        }
-
-        return result.toString();
+        return "Spot released successfully.\nTreap valid: " + treap.validateTreap();
     }
 
     public boolean isOccupied(int floor, int spot) {
@@ -113,7 +83,8 @@ public class ParkingService {
             return "Invalid floor.";
         }
 
-        List<String> occupied = parkingHouse.getFloor(floor).getOccupiedTreap().inorder();
+        Treap<Integer, VehicleInfo> treap = parkingHouse.getFloor(floor).getOccupiedTreap();
+        List<TreapHelper.Entry<Integer, VehicleInfo>> occupied = TreapHelper.inorder(treap);
 
         if (occupied.isEmpty()) {
             return "No occupied spots on floor " + floor + ".";
@@ -122,8 +93,12 @@ public class ParkingService {
         StringBuilder result = new StringBuilder();
         result.append("Occupied spots on floor ").append(floor).append(":\n");
 
-        for (String item : occupied) {
-            result.append(item).append("\n");
+        for (TreapHelper.Entry<Integer, VehicleInfo> entry : occupied) {
+            result.append("Spot ")
+                    .append(entry.key())
+                    .append(" -> ")
+                    .append(entry.value())
+                    .append("\n");
         }
 
         return result.toString();
@@ -190,24 +165,25 @@ public class ParkingService {
         return "Treap validation for floor " + floor + ": " + valid;
     }
 
-    public String printTreap(int floor) {
-        if (isInvalidFloor(floor)) {
-            return "Invalid floor.";
-        }
-
-        return parkingHouse.getFloor(floor).getOccupiedTreap().printTreap();
-    }
-
-    public Treap.ViewNode<Integer, VehicleInfo> getTreapViewRoot(int floor) {
+    public TreapHelper.SnapshotNode<Integer, VehicleInfo> getTreapSnapshotRoot(int floor) {
         if (isInvalidFloor(floor)) {
             return null;
         }
 
-        return parkingHouse.getFloor(floor).getOccupiedTreap().getViewRoot();
+        Treap<Integer, VehicleInfo> treap = parkingHouse.getFloor(floor).getOccupiedTreap();
+        return TreapHelper.buildSnapshot(treap);
     }
 
     public String getActionLog() {
         return actionLog.toString();
+    }
+
+    public int getFloorCount() {
+        return parkingHouse.getFloorCount();
+    }
+
+    public int getSpotsPerFloor() {
+        return parkingHouse.getSpotsPerFloor();
     }
 
     private boolean isInvalidFloor(int floor) {

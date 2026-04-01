@@ -1,8 +1,8 @@
 package GUI;
 
-import Algorithms.Treap;
 import Model.VehicleInfo;
 import Service.ParkingService;
+import Service.TreapHelper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -191,10 +191,12 @@ public class ParkingFloorPanel extends JPanel {
         int nearest = service.findNearestFreeSpot(selectedFloor, selectedSpot);
 
         if (nearest == -1) {
+            nearestFreeSpot = null;
             suggestedSpot = null;
             goToButton.setVisible(false);
             resultPanel.showText("No free spot found on this floor.");
         } else if (nearest == selectedSpot && !service.isOccupied(selectedFloor, selectedSpot)) {
+            nearestFreeSpot = null;
             suggestedSpot = null;
             goToButton.setVisible(false);
             resultPanel.showText("Selected spot is already free.");
@@ -278,7 +280,7 @@ public class ParkingFloorPanel extends JPanel {
         int usableHeight = panelHeight - topMargin - bottomMargin;
 
         int columns = 6;
-        int rows = 2;
+        int rows = Math.max(1, (int) Math.ceil(service.getSpotsPerFloor() / 6.0));
 
         int horizontalGap = Math.max(10, usableWidth / 50);
         int verticalGap = Math.max(28, usableHeight / 7);
@@ -301,7 +303,9 @@ public class ParkingFloorPanel extends JPanel {
         g2.setFont(new Font("Arial", Font.BOLD, 24));
         g2.drawString("Floor " + selectedFloor, area.x + 20, area.y + titleY);
 
-        for (int i = 0; i < 12; i++) {
+        int totalSpots = service.getSpotsPerFloor();
+
+        for (int i = 0; i < totalSpots; i++) {
             int row = i / columns;
             int column = i % columns;
 
@@ -354,7 +358,7 @@ public class ParkingFloorPanel extends JPanel {
         g2.setFont(new Font("Arial", Font.BOLD, 18));
         g2.drawString("Treap Structure", area.x + 18, area.y + 32);
 
-        Treap.ViewNode<Integer, VehicleInfo> root = service.getTreapViewRoot(selectedFloor);
+        TreapHelper.SnapshotNode<Integer, VehicleInfo> root = service.getTreapSnapshotRoot(selectedFloor);
 
         if (root == null) {
             g2.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -369,13 +373,7 @@ public class ParkingFloorPanel extends JPanel {
         drawTreapNode(g2, root, centerX, startY, offset);
     }
 
-    private void drawTreapNode(
-            Graphics2D g2,
-            Treap.ViewNode<Integer, VehicleInfo> node,
-            int x,
-            int y,
-            int offset
-    ) {
+    private void drawTreapNode(Graphics2D g2, TreapHelper.SnapshotNode<Integer, VehicleInfo> node, int x, int y, int offset) {
         if (node == null) {
             return;
         }
@@ -383,18 +381,18 @@ public class ParkingFloorPanel extends JPanel {
         int nextY = y + 72;
         int nextOffset = Math.max(38, offset / 2);
 
-        if (node.left != null) {
+        if (node.left() != null) {
             int childX = x - offset;
             g2.setColor(Color.BLACK);
             g2.drawLine(x, y, childX, nextY);
-            drawTreapNode(g2, node.left, childX, nextY, nextOffset);
+            drawTreapNode(g2, node.left(), childX, nextY, nextOffset);
         }
 
-        if (node.right != null) {
+        if (node.right() != null) {
             int childX = x + offset;
             g2.setColor(Color.BLACK);
             g2.drawLine(x, y, childX, nextY);
-            drawTreapNode(g2, node.right, childX, nextY, nextOffset);
+            drawTreapNode(g2, node.right(), childX, nextY, nextOffset);
         }
 
         int radius = 22;
@@ -407,14 +405,14 @@ public class ParkingFloorPanel extends JPanel {
         g2.drawOval(x - radius, y - radius, radius * 2, radius * 2);
 
         g2.setFont(new Font("Arial", Font.BOLD, 11));
-        String keyText = String.valueOf(node.key);
+        String keyText = String.valueOf(node.key());
         FontMetrics keyMetrics = g2.getFontMetrics();
         int keyX = x - keyMetrics.stringWidth(keyText) / 2;
         int keyY = y - 2;
         g2.drawString(keyText, keyX, keyY);
 
         g2.setFont(new Font("Arial", Font.PLAIN, 10));
-        String priorityText = "p=" + node.priority;
+        String priorityText = "p=" + node.priority();
         FontMetrics priorityMetrics = g2.getFontMetrics();
         int priorityX = x - priorityMetrics.stringWidth(priorityText) / 2;
         int priorityY = y + 12;

@@ -1,27 +1,8 @@
 package Algorithms;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class Treap<K extends Comparable<K>, V> {
-
-    @SuppressWarnings("ClassCanBeRecord")
-    public static final class ViewNode<K, V> {
-        public final K key;
-        public final V value;
-        public final int priority;
-        public final ViewNode<K, V> left;
-        public final ViewNode<K, V> right;
-
-        public ViewNode(K key, V value, int priority, ViewNode<K, V> left, ViewNode<K, V> right) {
-            this.key = key;
-            this.value = value;
-            this.priority = priority;
-            this.left = left;
-            this.right = right;
-        }
-    }
 
     private class Node {
         K key;
@@ -39,20 +20,24 @@ public class Treap<K extends Comparable<K>, V> {
 
     private Node root;
     private final Random random = new Random();
-    private final StringBuilder rotationLog = new StringBuilder();
 
     public boolean contains(K key) {
-        return search(key) != null;
+        return findNode(key) != null;
     }
 
     public V search(K key) {
+        Node node = findNode(key);
+        return node == null ? null : node.value;
+    }
+
+    private Node findNode(K key) {
         Node current = root;
 
         while (current != null) {
             int cmp = key.compareTo(current.key);
 
             if (cmp == 0) {
-                return current.value;
+                return current;
             } else if (cmp < 0) {
                 current = current.left;
             } else {
@@ -65,18 +50,15 @@ public class Treap<K extends Comparable<K>, V> {
 
     public boolean insert(K key, V value) {
         if (contains(key)) {
-            log("Insert skipped: key " + key + " already exists.");
             return false;
         }
 
-        log("INSERT key=" + key);
         root = insertNode(root, new Node(key, value));
         return true;
     }
 
     private Node insertNode(Node current, Node newNode) {
         if (current == null) {
-            log("Inserted node key=" + newNode.key + ", priority=" + newNode.priority);
             return newNode;
         }
 
@@ -86,16 +68,12 @@ public class Treap<K extends Comparable<K>, V> {
             current.left = insertNode(current.left, newNode);
 
             if (current.left != null && current.left.priority > current.priority) {
-                log("Heap violation after insert: child key=" + current.left.key
-                        + " has higher priority than parent key=" + current.key);
                 current = rotateRight(current);
             }
         } else {
             current.right = insertNode(current.right, newNode);
 
             if (current.right != null && current.right.priority > current.priority) {
-                log("Heap violation after insert: child key=" + current.right.key
-                        + " has higher priority than parent key=" + current.key);
                 current = rotateLeft(current);
             }
         }
@@ -105,11 +83,9 @@ public class Treap<K extends Comparable<K>, V> {
 
     public boolean delete(K key) {
         if (!contains(key)) {
-            log("Delete skipped: key " + key + " does not exist.");
             return false;
         }
 
-        log("DELETE key=" + key);
         root = deleteNode(root, key);
         return true;
     }
@@ -126,29 +102,22 @@ public class Treap<K extends Comparable<K>, V> {
         } else if (cmp > 0) {
             node.right = deleteNode(node.right, key);
         } else {
-            log("Found node to delete: key=" + node.key + ", priority=" + node.priority);
-
             if (node.left == null && node.right == null) {
-                log("Deleting leaf node key=" + node.key);
                 return null;
             }
 
             if (node.left == null) {
-                log("Deleting node key=" + node.key + " with only right child.");
                 return node.right;
             }
 
             if (node.right == null) {
-                log("Deleting node key=" + node.key + " with only left child.");
                 return node.left;
             }
 
             if (node.left.priority > node.right.priority) {
-                log("Delete rebalance: left child has higher priority, rotate RIGHT on key=" + node.key);
                 node = rotateRight(node);
                 node.right = deleteNode(node.right, key);
             } else {
-                log("Delete rebalance: right child has higher priority, rotate LEFT on key=" + node.key);
                 node = rotateLeft(node);
                 node.left = deleteNode(node.left, key);
             }
@@ -158,45 +127,23 @@ public class Treap<K extends Comparable<K>, V> {
     }
 
     private Node rotateLeft(Node root) {
-        log("LEFT ROTATION on key=" + root.key);
-
         Node newRoot = root.right;
         Node movedSubtree = newRoot.left;
 
         newRoot.left = root;
         root.right = movedSubtree;
 
-        log("After LEFT rotation: new parent key=" + newRoot.key + ", moved down key=" + root.key);
         return newRoot;
     }
 
     private Node rotateRight(Node root) {
-        log("RIGHT ROTATION on key=" + root.key);
-
         Node newRoot = root.left;
         Node movedSubtree = newRoot.right;
 
         newRoot.right = root;
         root.left = movedSubtree;
 
-        log("After RIGHT rotation: new parent key=" + newRoot.key + ", moved down key=" + root.key);
         return newRoot;
-    }
-
-    public List<String> inorder() {
-        List<String> result = new ArrayList<>();
-        inorderTraversal(root, result);
-        return result;
-    }
-
-    private void inorderTraversal(Node node, List<String> result) {
-        if (node == null) {
-            return;
-        }
-
-        inorderTraversal(node.left, result);
-        result.add("Spot " + node.key + " -> " + node.value);
-        inorderTraversal(node.right, result);
     }
 
     public K predecessor(K key) {
@@ -266,67 +213,5 @@ public class Treap<K extends Comparable<K>, V> {
         }
 
         return isHeap(node.left) && isHeap(node.right);
-    }
-
-    public String printTreap() {
-        StringBuilder builder = new StringBuilder();
-
-        if (root == null) {
-            return "Treap is empty.";
-        }
-
-        printNode(root, builder, 0);
-        return builder.toString();
-    }
-
-    private void printNode(Node node, StringBuilder builder, int depth) {
-        if (node == null) {
-            return;
-        }
-
-        printNode(node.right, builder, depth + 1);
-
-        builder.append("    ".repeat(depth))
-                .append("[spot=")
-                .append(node.key)
-                .append(", priority=")
-                .append(node.priority)
-                .append(", value=")
-                .append(node.value)
-                .append("]")
-                .append("\n");
-
-        printNode(node.left, builder, depth + 1);
-    }
-
-    public ViewNode<K, V> getViewRoot() {
-        return buildView(root);
-    }
-
-    private ViewNode<K, V> buildView(Node node) {
-        if (node == null) {
-            return null;
-        }
-
-        return new ViewNode<>(
-                node.key,
-                node.value,
-                node.priority,
-                buildView(node.left),
-                buildView(node.right)
-        );
-    }
-
-    public String getRotationLog() {
-        return rotationLog.toString();
-    }
-
-    public void clearRotationLog() {
-        rotationLog.setLength(0);
-    }
-
-    private void log(String message) {
-        rotationLog.append(message).append("\n");
-        System.out.println(message);
     }
 }

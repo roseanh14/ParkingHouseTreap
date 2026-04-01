@@ -25,7 +25,13 @@ public class ControlPanel extends JPanel {
         this.service = service;
         this.floorPanel = floorPanel;
         this.resultPanel = resultPanel;
-        this.floorCombo = new JComboBox<>(new Integer[]{1, 2, 3, 4});
+
+        Integer[] floors = new Integer[service.getFloorCount()];
+        for (int i = 0; i < floors.length; i++) {
+            floors[i] = i + 1;
+        }
+
+        this.floorCombo = new JComboBox<>(floors);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(DARK);
@@ -70,8 +76,7 @@ public class ControlPanel extends JPanel {
         add(section(
                 "4. Treap Operations",
                 createButton("List Occupied Spots", this::listOccupiedSpots),
-                createButton("Validate Treap", this::validateTreap),
-                createButton("Show Treap", this::showTreap)
+                createButton("Validate Treap", this::validateTreap)
         ));
 
         add(Box.createVerticalGlue());
@@ -236,14 +241,5 @@ public class ControlPanel extends JPanel {
         }
 
         resultPanel.showText(service.validateTreap(floor));
-    }
-
-    private void showTreap() {
-        int floor = getSelectedFloorOrShowMessage();
-        if (floor == -1) {
-            return;
-        }
-
-        resultPanel.showText("Treap structure for floor " + floor + ":\n\n" + service.printTreap(floor));
     }
 }
