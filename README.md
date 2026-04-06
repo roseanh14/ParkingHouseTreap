@@ -1,17 +1,59 @@
 # Parking House Treap 🚗
 
-A desktop Java application for managing a multi-floor parking house using a **Treap data structure**.
+A desktop Java application for managing a multi-floor parking house using a **Treap (Binary Search Tree + Heap)** data structure.
+
+This project demonstrates practical usage of advanced data structures in a real-world scenario.
+
+---
+
+## Overview
+
+The application simulates a parking house consisting of multiple floors, where each floor is represented by a **separate Treap instance**.
+
+Each parking spot is stored as:
+- **Key (K):** parking spot number
+- **Priority:** randomly generated value
+- **Value (V):** vehicle information (e.g., ID, license plate)
+
+---
 
 ## Features
 
-- 4 parking floors
+- 4 parking floors (each with its own Treap)
 - 12 parking spots per floor
-- Visual GUI for parking layout
-- Occupy / Release parking spots
-- Find nearest free spot (using Treap)
+- Graphical user interface (Swing)
+- Occupy / release parking spots
+- Check if a spot is occupied
+- List occupied spots in sorted order
+- Find the nearest free parking spot
 - Load initial data from file
-- Save action logs to file
-- Validate Treap structure
+- Save logs to file
+- Validation of Treap properties (BST + Heap)
+
+---
+
+## Algorithms
+
+### Treap Operations
+- Insert (with rotations)
+- Delete (with rotations)
+- Search
+- In-order traversal (sorted output)
+
+### Nearest Free Spot
+If the requested spot is:
+- **free → returned immediately**
+- **occupied → algorithm finds predecessor & successor**
+  and selects the closest available spot
+
+---
+
+## Technologies
+
+- Java
+- Swing (GUI)
+- Custom Treap implementation
+- Object-Oriented Design
 
 ---
 
